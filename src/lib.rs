@@ -1647,6 +1647,38 @@ impl UnixSeqpacket {
     }
 }
 
+impl io::Read for UnixSeqpacket {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        io::Read::read(&mut &*self, buf)
+    }
+}
+
+impl<'a> io::Read for &'a UnixSeqpacket {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        self.inner.recv(buf)
+    }
+}
+
+impl io::Write for UnixSeqpacket {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        io::Write::write(&mut &*self, buf)
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        io::Write::flush(&mut &*self)
+    }
+}
+
+impl<'a> io::Write for &'a UnixSeqpacket {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.inner.send(buf)
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
+    }
+}
+
 impl AsRawFd for UnixSeqpacket {
     fn as_raw_fd(&self) -> RawFd {
         self.inner.0
